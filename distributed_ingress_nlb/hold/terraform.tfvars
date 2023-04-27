@@ -1,0 +1,43 @@
+
+aws_region                  = "us-west-2"
+availability_zone_1         = "a"
+availability_zone_2         = "c"
+
+#
+# Subnet bits = number of bits used in the cidr for subnet.
+# e.g. 10.0.0.0/16 cidr with 8 subnet bits means each subnet is 10.0.0.0/24, 10.0.1.0/24, etc
+#
+subnet_bits                 = 8
+
+#
+# index in the subnet in the cidr range.
+# e.g. index 1 in 10.0.0.0/16 is 10.0.1.0/24
+#
+public_subnet_index         = 0
+fwaas_subnet_index          = 1
+private_subnet_index        = 2
+
+#
+# Variables likely to change
+#
+keypair                     = "mdw-key-oregon"
+
+#
+# cp (customer_prefix) and env (environment) prepended to all resources created by the template.
+# Used for identification. e.g. "<customer_prefix>-<prod/test/dev>"
+#
+cp                          = "cnf-dist"
+env                         = "prod"
+vpc_name                    = "app"
+vpc_cidr                    = "10.0.0.0/16"
+
+#
+# Endpoints Variables
+#
+use_preallocated_elastic_ip = false
+enable_public_ips           = true
+ec2_sg_name                 = "ec2"
+linux_instance_name         = "Linux Instance"
+linux_instance_type         = "t2.micro"
+linux_host_ip               = 11
+acl                         = "private"
