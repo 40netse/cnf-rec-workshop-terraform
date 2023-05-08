@@ -40,9 +40,6 @@ vpc_cidr_west_public_az2    = "192.168.1.16/28"
 vpc_cidr_west_private_az1   = "192.168.1.32/28"
 vpc_cidr_west_private_az2   = "192.168.1.48/28"
 
-
-fortimanager_admin_password = ""
-
 fortimanager_instance_type  = "c5.xlarge"
 
 fortimanager_os_version     = "7.2.2"
