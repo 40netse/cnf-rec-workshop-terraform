@@ -73,9 +73,6 @@ variable "fortimanager_os_version" {
 variable "fortimanager_host_ip" {
   description = "Fortimanager IP Address"
 }
-variable "fortimanager_admin_password" {
-  description = "Fortimanager Admin Password"
-}
 variable "cidr_for_access" {
   description = "CIDR to use for security group access"
 }
