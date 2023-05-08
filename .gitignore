@@ -6,11 +6,14 @@
 **/*.pyc
 **/venv
 **/site-packages
+**/.terraform
+**/.terraform.lock.hcl
 \#*#
 *.swp
 *.pyc
 *.lic
 debug.log
+terraform.tfvars
 .repo_conf/*.retry
 **/.idea
 **/__pycache__
