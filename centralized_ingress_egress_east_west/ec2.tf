@@ -199,7 +199,6 @@ data "template_file" "fmgr_userdata" {
 
   vars = {
     fmgr_byol_license      = file("./licenses/fmgr-license.lic")
-    fmgr_admin_password     = var.fortimanager_admin_password
   }
 }
 
