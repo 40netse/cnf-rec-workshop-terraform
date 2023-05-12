@@ -1,6 +1,6 @@
 
 locals {
-  linux_east_az1_public_ip_address = cidrhost(var.vpc_cidr_east_public_az1, var.linux_host_ip)
+  linux_inspection_az1_public_ip_address = cidrhost(local.public_subnet_cidr_az1, var.linux_host_ip)
 }
 locals {
   linux_east_az1_ip_address = cidrhost(var.vpc_cidr_east_private_az1, var.linux_host_ip)
@@ -14,6 +14,10 @@ locals {
 locals {
   linux_west_az2_ip_address = cidrhost(var.vpc_cidr_west_private_az2, var.linux_host_ip)
 }
+locals {
+  fortimanager_ip_address = cidrhost(local.public_subnet_cidr_az1, var.fortimanager_host_ip)
+}
+
 #
 # Optional Linux Instances from here down
 #
@@ -59,6 +63,20 @@ data "aws_ami" "ubuntu" {
 #
 # Security Groups are VPC specific, so an "ALLOW ALL" for each VPC
 #
+module "ec2-inspection-sg" {
+  source                  = "git::https://github.com/40netse/terraform-modules.git//aws_security_group"
+  sg_name                 = "${var.cp}-${var.env}-${random_string.random.result}-east sg Allow Inspection Subnets"
+  vpc_id                  = module.vpc-inspection.vpc_id
+  ingress_to_port         = 0
+  ingress_from_port       = 0
+  ingress_protocol        = "-1"
+  ingress_cidr_for_access = "0.0.0.0/0"
+  egress_to_port          = 0
+  egress_from_port        = 0
+  egress_protocol         = "-1"
+  egress_cidr_for_access  = "0.0.0.0/0"
+}
+
 module "ec2-east-sg" {
   source                  = "git::https://github.com/40netse/terraform-modules.git//aws_security_group"
   sg_name                 = "${var.cp}-${var.env}-${random_string.random.result}-east sg Allow East Subnets"
@@ -99,18 +117,18 @@ module "linux_iam_profile" {
 #
 # East Linux Instance for Jump Box
 #
-module "east_instance_public_az1" {
+module "inspection_instance_public_az1" {
 #  depends_on                  = [ time_sleep.wait_5_minutes]
   source                      = "git::https://github.com/40netse/terraform-modules.git//aws_ec2_instance"
-  aws_ec2_instance_name       = "${var.cp}-${var.env}-east-public_az1-instance"
+  aws_ec2_instance_name       = "${var.cp}-${var.env}-inspection-public_az1-instance"
   enable_public_ips           = true
   availability_zone           = local.availability_zone_1
-  public_subnet_id            = module.subnet-east-public-az1.id
-  public_ip_address           = local.linux_east_az1_public_ip_address
+  public_subnet_id            = module.subnet-inspection-public-az1.id
+  public_ip_address           = local.linux_inspection_az1_public_ip_address
   aws_ami                     = data.aws_ami.ubuntu.id
   keypair                     = var.keypair
   instance_type               = var.linux_instance_type
-  security_group_public_id    = module.ec2-east-sg.id
+  security_group_public_id    = module.ec2-inspection-sg.id
   acl                         = var.acl
   iam_instance_profile_id     = module.iam_profile.id
   userdata_rendered           = data.template_file.web_userdata_az1.rendered
@@ -252,7 +270,7 @@ module "fortimanager" {
   aws_ec2_instance_name       = "${var.cp}-${var.env}-Fortimanager"
   availability_zone           = local.availability_zone_1
   instance_type               = var.fortimanager_instance_type
-  public_subnet_id            = module.subnet-private-az1.id
+  public_subnet_id            = module.subnet-inspection-public-az1.id
   public_ip_address           = local.fortimanager_ip_address
   aws_ami                     = data.aws_ami.fortimanager.id
   enable_public_ips           = true

@@ -15,7 +15,7 @@ module "vpc-transit-gateway-attachment-inspection" {
   tgw_attachment_name            = "${var.cp}-${var.env}-inpspection-tgw-attachment"
 
   transit_gateway_id                              = module.vpc-transit-gateway.tgw_id
-  subnet_ids                                      = [ module.subnet-private-az1.id, module.subnet-private-az2.id]
+  subnet_ids                                      = [ module.subnet-inspection-private-az1.id, module.subnet-inspection-private-az2.id]
   transit_gateway_default_route_table_propogation = "true"
   appliance_mode_support                          = "enable"
   vpc_id                                          = module.vpc-inspection.vpc_id
@@ -33,16 +33,15 @@ resource "aws_ec2_transit_gateway_route_table_association" "inspection" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.inspection.id
 }
 
-resource "aws_ec2_transit_gateway_route" "tgw_route_security_default" {
-  destination_cidr_block         = var.vpc_cidr_west
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.inspection.id
-  transit_gateway_attachment_id  = module.vpc-transit-gateway-attachment-west.tgw_attachment_id
-}
-
-resource "aws_ec2_transit_gateway_route" "tgw_route_security_cidr" {
+resource "aws_ec2_transit_gateway_route" "tgw_route_inspection_cidr_east" {
   destination_cidr_block         = var.vpc_cidr_east
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.inspection.id
   transit_gateway_attachment_id  = module.vpc-transit-gateway-attachment-east.tgw_attachment_id
+}
+resource "aws_ec2_transit_gateway_route" "tgw_route_inspection_cidr_west" {
+  destination_cidr_block         = var.vpc_cidr_west
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.inspection.id
+  transit_gateway_attachment_id  = module.vpc-transit-gateway-attachment-west.tgw_attachment_id
 }
 
 #
@@ -55,6 +54,7 @@ module "vpc-transit-gateway-attachment-east" {
   transit_gateway_id                              = module.vpc-transit-gateway.tgw_id
   subnet_ids                                      = [ module.subnet-east-private-az1.id, module.subnet-east-private-az2.id ]
   transit_gateway_default_route_table_propogation = "false"
+  appliance_mode_support                          = "enable"
   vpc_id                                          = module.vpc-east.vpc_id
 }
 
@@ -73,11 +73,6 @@ resource "aws_ec2_transit_gateway_route" "tgw_route_east_default" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east.id
   transit_gateway_attachment_id  = module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id
 }
-resource "aws_ec2_transit_gateway_route" "tgw_route_east_cidr" {
-  destination_cidr_block         = var.vpc_cidr_east
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.east.id
-  transit_gateway_attachment_id  = module.vpc-transit-gateway-attachment-east.tgw_attachment_id
-}
 
 #
 # West VPC Transit Gateway Attachment, Route Table and Routes
@@ -87,8 +82,9 @@ module "vpc-transit-gateway-attachment-west" {
   tgw_attachment_name            = "${var.cp}-${var.env}-west-tgw-attachment"
 
   transit_gateway_id                              = module.vpc-transit-gateway.tgw_id
-  subnet_ids                                      = [ module.subnet-west-private-az1.id, module.subnet-west-private-az1.id ]
+  subnet_ids                                      = [ module.subnet-west-private-az1.id, module.subnet-west-private-az2.id ]
   transit_gateway_default_route_table_propogation = "false"
+  appliance_mode_support                          = "enable"
   vpc_id                                          = module.vpc-west.vpc_id
 }
 
@@ -102,12 +98,6 @@ resource "aws_ec2_transit_gateway_route_table" "west" {
 resource "aws_ec2_transit_gateway_route_table_association" "west" {
   transit_gateway_attachment_id  = module.vpc-transit-gateway-attachment-west.tgw_attachment_id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west.id
-}
-
-resource "aws_ec2_transit_gateway_route" "tgw_route_west" {
-  destination_cidr_block         = var.vpc_cidr_west
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.west.id
-  transit_gateway_attachment_id  = module.vpc-transit-gateway-attachment-west.tgw_attachment_id
 }
 
 resource "aws_ec2_transit_gateway_route" "tgw_route_west_default" {

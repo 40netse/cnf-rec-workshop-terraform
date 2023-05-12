@@ -37,9 +37,6 @@ locals {
 locals {
   private_subnet_cidr_az2 = cidrsubnet(var.vpc_cidr_inspection, var.subnet_bits, var.private_subnet_index + 3)
 }
-locals {
-  fortimanager_ip_address = cidrhost(local.private_subnet_cidr_az1, var.fortimanager_host_ip)
-}
 
 resource "random_string" "random" {
   length           = 5
@@ -54,6 +51,7 @@ resource "random_string" "random" {
 # Spoke VPC
 #
 module "vpc-inspection" {
+  depends_on = [ module.vpc-transit-gateway.tgw_id ]
   source = "git::https://github.com/40netse/terraform-modules.git//aws_vpc"
   vpc_name                   = "${var.cp}-${var.env}-inspection-vpc"
   vpc_cidr                   = var.vpc_cidr_inspection
@@ -63,6 +61,31 @@ module "vpc-igw-inspection" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_igw"
   igw_name                   = "${var.cp}-${var.env}-inspection-igw"
   vpc_id                     = module.vpc-inspection.vpc_id
+}
+
+
+resource "aws_eip" "nat-gateway-inspection-az1" {
+  vpc = true
+}
+
+resource "aws_eip" "nat-gateway-inspection-az2" {
+  vpc = true
+}
+
+resource "aws_nat_gateway" "vpc-inspection-az1" {
+  allocation_id     = aws_eip.nat-gateway-inspection-az1.id
+  subnet_id         = module.subnet-inspection-public-az1.id
+  tags = {
+    Name = "${var.cp}-${var.env}-nat-gw-east-az1"
+  }
+}
+
+resource "aws_nat_gateway" "vpc-inspection-az2" {
+  allocation_id     = aws_eip.nat-gateway-inspection-az2.id
+  subnet_id         = module.subnet-inspection-public-az2.id
+  tags = {
+    Name = "${var.cp}-${var.env}-nat-gw-east-az2"
+  }
 }
 
 module "igw-route-table" {
@@ -79,7 +102,7 @@ resource "aws_route_table_association" "b" {
 #
 # AZ 1
 #
-module "subnet-public-az1" {
+module "subnet-inspection-public-az1" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
   subnet_name                = "${var.cp}-${var.env}-inspection-public-az1"
 
@@ -88,12 +111,12 @@ module "subnet-public-az1" {
   subnet_cidr                = local.public_subnet_cidr_az1
 }
 resource aws_ec2_tag "subnet_public_tag_az1" {
-  resource_id = module.subnet-public-az1.id
+  resource_id = module.subnet-inspection-public-az1.id
   key = "Workshop-area"
   value = "Public-Az1"
 }
 
-module "subnet-fwaas-az1" {
+module "subnet-inspection-fwaas-az1" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
   subnet_name                = "${var.cp}-${var.env}-inspection-fwaas-az1"
 
@@ -103,12 +126,12 @@ module "subnet-fwaas-az1" {
 }
 
 resource aws_ec2_tag "subnet_fwaas_tag_az1" {
-  resource_id = module.subnet-fwaas-az1.id
+  resource_id = module.subnet-inspection-fwaas-az1.id
   key = "Workshop-area"
   value = "Fwaas-Az1"
 }
 
-module "subnet-private-az1" {
+module "subnet-inspection-private-az1" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
   subnet_name                = "${var.cp}-${var.env}-inspection-private-az1"
 
@@ -117,11 +140,11 @@ module "subnet-private-az1" {
   subnet_cidr                = local.private_subnet_cidr_az1
 }
 resource aws_ec2_tag "subnet_private_tag_az1" {
-  resource_id = module.subnet-private-az1.id
+  resource_id = module.subnet-inspection-private-az1.id
   key = "Workshop-area"
   value = "Private-Az1"
 }
-module "private-route-table-az1" {
+module "inspection-private-route-table-az1" {
   source  = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
   rt_name = "${var.cp}-${var.env}-inspection-private-rt-az1"
 
@@ -130,8 +153,8 @@ module "private-route-table-az1" {
 module "private-route-table-association-az1" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
-  subnet_ids                 = module.subnet-private-az1.id
-  route_table_id             = module.private-route-table-az1.id
+  subnet_ids                 = module.subnet-inspection-private-az1.id
+  route_table_id             = module.inspection-private-route-table-az1.id
 }
 module "fwaas-route-table-az1" {
   source  = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
@@ -142,14 +165,14 @@ module "fwaas-route-table-az1" {
 module "fwaas-route-table-association-az1" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
-  subnet_ids                 = module.subnet-fwaas-az1.id
+  subnet_ids                 = module.subnet-inspection-fwaas-az1.id
   route_table_id             = module.fwaas-route-table-az1.id
 }
 
 #
 # AZ 2
 #
-module "subnet-public-az2" {
+module "subnet-inspection-public-az2" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
   subnet_name                = "${var.cp}-${var.env}-inspection-public-az2"
 
@@ -158,11 +181,11 @@ module "subnet-public-az2" {
   subnet_cidr                = local.public_subnet_cidr_az2
 }
 resource aws_ec2_tag "subnet_public_tag_az2" {
-  resource_id = module.subnet-public-az2.id
+  resource_id = module.subnet-inspection-public-az2.id
   key = "Workshop-area"
   value = "Public-Az2"
 }
-module "subnet-fwaas-az2" {
+module "subnet-inspection-fwaas-az2" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
   subnet_name                = "${var.cp}-${var.env}-inspection-fwaas-az2"
 
@@ -171,21 +194,21 @@ module "subnet-fwaas-az2" {
   subnet_cidr                = local.fwaas_subnet_cidr_az2
 }
 resource aws_ec2_tag "subnet_fwaas_tag_az2" {
-  resource_id = module.subnet-fwaas-az2.id
+  resource_id = module.subnet-inspection-fwaas-az2.id
   key = "Workshop-area"
   value = "Fwaas-Az2"
 }
 resource aws_ec2_tag "fwaas_tag_az1" {
-  resource_id = module.subnet-fwaas-az1.id
+  resource_id = module.subnet-inspection-fwaas-az1.id
   key = "fortigatecnf_subnet_type"
   value = "endpoint"
 }
 resource aws_ec2_tag "fwaas_tag_az2" {
-  resource_id = module.subnet-fwaas-az2.id
+  resource_id = module.subnet-inspection-fwaas-az2.id
   key = "fortigatecnf_subnet_type"
   value = "endpoint"
 }
-module "subnet-private-az2" {
+module "subnet-inspection-private-az2" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
   subnet_name                = "${var.cp}-${var.env}-inspection-private-az2"
 
@@ -193,12 +216,12 @@ module "subnet-private-az2" {
   availability_zone          = local.availability_zone_2
   subnet_cidr                = local.private_subnet_cidr_az2
 }
-resource aws_ec2_tag "subnet_private_tag_az2" {
-  resource_id = module.subnet-private-az2.id
+resource aws_ec2_tag "subnet_inspection_private_tag_az2" {
+  resource_id = module.subnet-inspection-private-az2.id
   key = "Workshop-area"
   value = "Private-Az2"
 }
-module "public-route-table" {
+module "inspection-public-route-table" {
   source  = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
   rt_name = "${var.cp}-${var.env}-inspection-public-rt"
 
@@ -208,11 +231,11 @@ module "public-route-table" {
 module "public_route_table_association" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
-  subnet_ids                 = module.subnet-public-az2.id
-  route_table_id             = module.public-route-table.id
+  subnet_ids                 = module.subnet-inspection-public-az2.id
+  route_table_id             = module.inspection-public-route-table.id
 }
 
-module "private-route-table-az2" {
+module "inspection-private-route-table-az2" {
   source  = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
   rt_name = "${var.cp}-${var.env}-inspection-private-rt-az2"
 
@@ -221,34 +244,34 @@ module "private-route-table-az2" {
 module "private-route-table-association" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
-  subnet_ids                 = module.subnet-private-az2.id
-  route_table_id             = module.private-route-table-az2.id
+  subnet_ids                 = module.subnet-inspection-private-az2.id
+  route_table_id             = module.inspection-private-route-table-az1.id
 }
-module "fwaas-route-table-az2" {
+module "inspection-fwaas-route-table-az2" {
   source  = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
   rt_name = "${var.cp}-${var.env}-inspection-fwaas-rt-az2"
 
   vpc_id                     = module.vpc-inspection.vpc_id
 }
-module "fwaas-route-table-association" {
+module "inspection-fwaas-route-table-association" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
-  subnet_ids                 = module.subnet-fwaas-az2.id
-  route_table_id             = module.fwaas-route-table-az2.id
+  subnet_ids                 = module.subnet-inspection-fwaas-az2.id
+  route_table_id             = module.inspection-fwaas-route-table-az2.id
 }
 
 module "public-route-table-association-az1" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
-  subnet_ids                 = module.subnet-public-az1.id
-  route_table_id             = module.public-route-table.id
+  subnet_ids                 = module.subnet-inspection-public-az1.id
+  route_table_id             = module.inspection-public-route-table.id
 }
 
 module "public-route-table-association-az2" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
-  subnet_ids                 = module.subnet-public-az2.id
-  route_table_id             = module.public-route-table.id
+  subnet_ids                 = module.subnet-inspection-public-az2.id
+  route_table_id             = module.inspection-public-route-table.id
 }
 
 #
@@ -262,43 +285,91 @@ resource "aws_default_route_table" "route_inspection" {
 }
 
 #
-# Point the private route table default route to the Fortigate Private ENI
 #
-resource "aws_route" "public-default-route" {
-  route_table_id         = module.public-route-table.id
+#
+resource "aws_route" "public-default-route-default" {
+  route_table_id         = module.inspection-public-route-table.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = module.vpc-igw-inspection.igw_id
+}
+resource "aws_route" "public-default-route-east" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-public-route-table.id
+  destination_cidr_block = var.vpc_cidr_east
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
+}
+resource "aws_route" "public-default-route-west" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-public-route-table.id
+  destination_cidr_block = var.vpc_cidr_west
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
 }
 resource "aws_route" "private-az1-default-route" {
-  route_table_id         = module.private-route-table-az1.id
+  route_table_id         = module.inspection-private-route-table-az1.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = module.vpc-igw-inspection.igw_id
 }
+resource "aws_route" "private-az1-east-route" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-private-route-table-az1.id
+  destination_cidr_block = var.vpc_cidr_east
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
+}
+resource "aws_route" "private-az1-west-route" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-private-route-table-az1.id
+  destination_cidr_block = var.vpc_cidr_west
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
+}
 resource "aws_route" "private-az2-default-route" {
-  route_table_id         = module.private-route-table-az2.id
+  route_table_id         = module.inspection-private-route-table-az2.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = module.vpc-igw-inspection.igw_id
+}
+resource "aws_route" "private-az2-east-route" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-private-route-table-az2.id
+  destination_cidr_block = var.vpc_cidr_east
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
+}
+resource "aws_route" "private-az2-west-route" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-private-route-table-az2.id
+  destination_cidr_block = var.vpc_cidr_west
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
 }
 resource "aws_route" "fwaas-az1-default-route" {
   route_table_id         = module.fwaas-route-table-az1.id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = module.vpc-igw-inspection.igw_id
+  nat_gateway_id         = aws_nat_gateway.vpc-inspection-az1.id
+}
+resource "aws_route" "fwaas-az1-east-route" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.fwaas-route-table-az1.id
+  destination_cidr_block = var.vpc_cidr_east
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
+}
+resource "aws_route" "fwaas-az1-west-route" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.fwaas-route-table-az1.id
+  destination_cidr_block = var.vpc_cidr_west
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
 }
 resource "aws_route" "fwaas-az2-default-route" {
-  route_table_id         = module.fwaas-route-table-az2.id
+  route_table_id         = module.inspection-fwaas-route-table-az2.id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = module.vpc-igw-inspection.igw_id
+  nat_gateway_id         = aws_nat_gateway.vpc-inspection-az2.id
 }
-
-#
-# VPC Endpoint for AWS API Calls
-#
-module "vpc_s3_endpoint" {
-  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_vpc_endpoints"
-
-  aws_region                 = var.aws_region
-  vpc_endpoint_name          = "${var.cp}-${var.env}-vpc_endpoint"
-  vpc_id                     = module.vpc-inspection.vpc_id
-  route_table_id             = [ module.public-route-table.id ]
+resource "aws_route" "fwaas-az2-east-route" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-fwaas-route-table-az2.id
+  destination_cidr_block = var.vpc_cidr_east
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
+}
+resource "aws_route" "fwaas-az2-west-route" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-fwaas-route-table-az2.id
+  destination_cidr_block = var.vpc_cidr_west
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
 }
 

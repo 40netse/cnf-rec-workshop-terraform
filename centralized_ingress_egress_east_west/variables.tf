@@ -37,12 +37,6 @@ variable "vpc_cidr_inspection" {
 variable "vpc_cidr_east" {
     description = "CIDR for the whole east VPC"
 }
-variable "vpc_cidr_east_public_az1" {
-    description = "CIDR for the AZ1 public subnet in East VPC"
-}
-variable "vpc_cidr_east_public_az2" {
-    description = "CIDR for the AZ2 public subnet in East VPC"
-}
 variable "vpc_cidr_east_private_az1" {
     description = "CIDR for the AZ1 private subnet in East VPC"
 }
@@ -51,12 +45,6 @@ variable "vpc_cidr_east_private_az2" {
 }
 variable "vpc_cidr_west" {
     description = "CIDR for the whole west VPC"
-}
-variable "vpc_cidr_west_public_az1" {
-    description = "CIDR for the AZ1 public subnet in west VPC"
-}
-variable "vpc_cidr_west_public_az2" {
-    description = "CIDR for the AZ2 public subnet in west VPC"
 }
 variable "vpc_cidr_west_private_az1" {
     description = "CIDR for the AZ1 private subnet in west VPC"
