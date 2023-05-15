@@ -28,7 +28,7 @@ output "private2_subnet_id" {
   description = "The Private Subnet ID for AZ 2"
 }
 output "z_east_instance_public_az1_ssh" {
-  value = "Jump Box linux az1 ssh: ssh -i ${var.keypair}.pem ubuntu@${element(module.inspection_instance_public_az1.public_eip, 0)}"
+  value = "Jump Box linux az1 ssh: ssh -i ${var.keypair}.pem ubuntu@${element(module.inspection_instance_jump_box.public_eip, 0)}"
 }
 output "z_east_instance_private_az1_ssh" {
   value = "east private linux az1 ssh: ssh -i ${var.keypair}.pem ubuntu@${local.linux_east_az1_ip_address}"
