@@ -63,6 +63,26 @@ data "aws_ami" "ubuntu" {
 #
 # Security Groups are VPC specific, so an "ALLOW ALL" for each VPC
 #
+
+resource "aws_security_group" "ec2-jump-box-sg" {
+  description = "Security Group for Linux Jump Box"
+  vpc_id = module.vpc-inspection.vpc_id
+  ingress {
+    description = "Allow SSH from Anywhere IPv4 (change this to My IP)"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+  egress {
+    description = "Allow egress ALL"
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+}
+
 module "ec2-inspection-sg" {
   source                  = "git::https://github.com/40netse/terraform-modules.git//aws_security_group"
   sg_name                 = "${var.cp}-${var.env}-${random_string.random.result}-east sg Allow Inspection Subnets"
@@ -117,7 +137,7 @@ module "linux_iam_profile" {
 #
 # East Linux Instance for Jump Box
 #
-module "inspection_instance_public_az1" {
+module "inspection_instance_jump_box" {
 #  depends_on                  = [ time_sleep.wait_5_minutes]
   source                      = "git::https://github.com/40netse/terraform-modules.git//aws_ec2_instance"
   aws_ec2_instance_name       = "${var.cp}-${var.env}-inspection-jump-box-instance"
@@ -128,7 +148,7 @@ module "inspection_instance_public_az1" {
   aws_ami                     = data.aws_ami.ubuntu.id
   keypair                     = var.keypair
   instance_type               = var.linux_instance_type
-  security_group_public_id    = module.ec2-inspection-sg.id
+  security_group_public_id    = aws_security_group.ec2-jump-box-sg.id
   acl                         = var.acl
   iam_instance_profile_id     = module.iam_profile.id
   userdata_rendered           = data.template_file.web_userdata_az1.rendered
