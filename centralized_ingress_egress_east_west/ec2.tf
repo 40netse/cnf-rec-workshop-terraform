@@ -120,7 +120,7 @@ module "linux_iam_profile" {
 module "inspection_instance_public_az1" {
 #  depends_on                  = [ time_sleep.wait_5_minutes]
   source                      = "git::https://github.com/40netse/terraform-modules.git//aws_ec2_instance"
-  aws_ec2_instance_name       = "${var.cp}-${var.env}-inspection-public_az1-instance"
+  aws_ec2_instance_name       = "${var.cp}-${var.env}-inspection-jump-box-instance"
   enable_public_ips           = true
   availability_zone           = local.availability_zone_1
   public_subnet_id            = module.subnet-inspection-public-az1.id
