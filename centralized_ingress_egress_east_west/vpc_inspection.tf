@@ -307,8 +307,9 @@ resource "aws_route" "public-default-route-west" {
 resource "aws_route" "private-az1-default-route" {
   route_table_id         = module.inspection-private-route-table-az1.id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = module.vpc-igw-inspection.igw_id
+  nat_gateway_id         = aws_nat_gateway.vpc-inspection-az1.id
 }
+
 resource "aws_route" "private-az1-east-route" {
   depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
   route_table_id         = module.inspection-private-route-table-az1.id
@@ -324,8 +325,9 @@ resource "aws_route" "private-az1-west-route" {
 resource "aws_route" "private-az2-default-route" {
   route_table_id         = module.inspection-private-route-table-az2.id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = module.vpc-igw-inspection.igw_id
+  nat_gateway_id             = aws_nat_gateway.vpc-inspection-az2.id
 }
+
 resource "aws_route" "private-az2-east-route" {
   depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
   route_table_id         = module.inspection-private-route-table-az2.id
