@@ -104,7 +104,7 @@ resource "aws_route_table_association" "b" {
 #
 module "subnet-inspection-public-az1" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name                = "${var.cp}-${var.env}-inspection-public-az1"
+  subnet_name                = "${var.cp}-${var.env}-inspection-public-az1-subnet"
 
   vpc_id                     = module.vpc-inspection.vpc_id
   availability_zone          = local.availability_zone_1
@@ -118,7 +118,7 @@ resource aws_ec2_tag "subnet_public_tag_az1" {
 
 module "subnet-inspection-fwaas-az1" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name                = "${var.cp}-${var.env}-inspection-fwaas-az1"
+  subnet_name                = "${var.cp}-${var.env}-inspection-fwaas-az1-subnet"
 
   vpc_id                     = module.vpc-inspection.vpc_id
   availability_zone          = local.availability_zone_1
@@ -133,7 +133,7 @@ resource aws_ec2_tag "subnet_fwaas_tag_az1" {
 
 module "subnet-inspection-private-az1" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name                = "${var.cp}-${var.env}-inspection-private-az1"
+  subnet_name                = "${var.cp}-${var.env}-inspection-private-az1-subnet"
 
   vpc_id                     = module.vpc-inspection.vpc_id
   availability_zone          = local.availability_zone_1
@@ -150,7 +150,7 @@ module "inspection-private-route-table-az1" {
 
   vpc_id                     = module.vpc-inspection.vpc_id
 }
-module "private-route-table-association-az1" {
+module "inspection-private-route-table-association-az1" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
   subnet_ids                 = module.subnet-inspection-private-az1.id
@@ -174,7 +174,7 @@ module "fwaas-route-table-association-az1" {
 #
 module "subnet-inspection-public-az2" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name                = "${var.cp}-${var.env}-inspection-public-az2"
+  subnet_name                = "${var.cp}-${var.env}-inspection-public-az2-subnet"
 
   vpc_id                     = module.vpc-inspection.vpc_id
   availability_zone          = local.availability_zone_2
@@ -187,7 +187,7 @@ resource aws_ec2_tag "subnet_public_tag_az2" {
 }
 module "subnet-inspection-fwaas-az2" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name                = "${var.cp}-${var.env}-inspection-fwaas-az2"
+  subnet_name                = "${var.cp}-${var.env}-inspection-fwaas-az2-subnet"
 
   vpc_id                     = module.vpc-inspection.vpc_id
   availability_zone          = local.availability_zone_2
@@ -210,7 +210,7 @@ resource aws_ec2_tag "fwaas_tag_az2" {
 }
 module "subnet-inspection-private-az2" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name                = "${var.cp}-${var.env}-inspection-private-az2"
+  subnet_name                = "${var.cp}-${var.env}-inspection-private-az2-subnet"
 
   vpc_id                     = module.vpc-inspection.vpc_id
   availability_zone          = local.availability_zone_2
@@ -221,18 +221,32 @@ resource aws_ec2_tag "subnet_inspection_private_tag_az2" {
   key = "Workshop-area"
   value = "Private-Az2"
 }
-module "inspection-public-route-table" {
+module "inspection-public-route-table-az1" {
   source  = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
-  rt_name = "${var.cp}-${var.env}-inspection-public-rt"
+  rt_name = "${var.cp}-${var.env}-inspection-public-rt-az1"
 
   vpc_id                     = module.vpc-inspection.vpc_id
 }
 
-module "public_route_table_association" {
+module "inspection-public-route-table_association-az1" {
+  source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
+
+  subnet_ids                 = module.subnet-inspection-public-az1.id
+  route_table_id             = module.inspection-public-route-table-az1.id
+}
+
+module "inspection-public-route-table-az2" {
+  source  = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
+  rt_name = "${var.cp}-${var.env}-inspection-public-az2-rt"
+
+  vpc_id                     = module.vpc-inspection.vpc_id
+}
+
+module "inspection-public-route-table_association-az2" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
   subnet_ids                 = module.subnet-inspection-public-az2.id
-  route_table_id             = module.inspection-public-route-table.id
+  route_table_id             = module.inspection-public-route-table-az2.id
 }
 
 module "inspection-private-route-table-az2" {
@@ -241,11 +255,12 @@ module "inspection-private-route-table-az2" {
 
   vpc_id                     = module.vpc-inspection.vpc_id
 }
-module "private-route-table-association" {
+
+module "inspection-private-route-table-az2-association" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
   subnet_ids                 = module.subnet-inspection-private-az2.id
-  route_table_id             = module.inspection-private-route-table-az1.id
+  route_table_id             = module.inspection-private-route-table-az2.id
 }
 module "inspection-fwaas-route-table-az2" {
   source  = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
@@ -258,20 +273,6 @@ module "inspection-fwaas-route-table-association" {
 
   subnet_ids                 = module.subnet-inspection-fwaas-az2.id
   route_table_id             = module.inspection-fwaas-route-table-az2.id
-}
-
-module "public-route-table-association-az1" {
-  source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
-
-  subnet_ids                 = module.subnet-inspection-public-az1.id
-  route_table_id             = module.inspection-public-route-table.id
-}
-
-module "public-route-table-association-az2" {
-  source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
-
-  subnet_ids                 = module.subnet-inspection-public-az2.id
-  route_table_id             = module.inspection-public-route-table.id
 }
 
 #
@@ -287,23 +288,42 @@ resource "aws_default_route_table" "route_inspection" {
 #
 #
 #
-resource "aws_route" "public-default-route-default" {
-  route_table_id         = module.inspection-public-route-table.id
+resource "aws_route" "inspection-public-az1-default-route-default" {
+  route_table_id         = module.inspection-public-route-table-az1.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = module.vpc-igw-inspection.igw_id
 }
-resource "aws_route" "public-default-route-east" {
+resource "aws_route" "inspection-public-az2-default-route-default" {
+  route_table_id         = module.inspection-public-route-table-az2.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = module.vpc-igw-inspection.igw_id
+}
+resource "aws_route" "public-az1-default-route-east" {
   depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
-  route_table_id         = module.inspection-public-route-table.id
+  route_table_id         = module.inspection-public-route-table-az1.id
   destination_cidr_block = var.vpc_cidr_east
   transit_gateway_id     = module.vpc-transit-gateway.tgw_id
 }
-resource "aws_route" "public-default-route-west" {
+resource "aws_route" "public-az2-default-route-east" {
   depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
-  route_table_id         = module.inspection-public-route-table.id
+  route_table_id         = module.inspection-public-route-table-az2.id
+  destination_cidr_block = var.vpc_cidr_east
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
+}
+
+resource "aws_route" "public-az1-default-route-west" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-public-route-table-az1.id
   destination_cidr_block = var.vpc_cidr_west
   transit_gateway_id     = module.vpc-transit-gateway.tgw_id
 }
+resource "aws_route" "public-az2-default-route-west" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-public-route-table-az2.id
+  destination_cidr_block = var.vpc_cidr_west
+  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
+}
+
 resource "aws_route" "private-az1-default-route" {
   route_table_id         = module.inspection-private-route-table-az1.id
   destination_cidr_block = "0.0.0.0/0"

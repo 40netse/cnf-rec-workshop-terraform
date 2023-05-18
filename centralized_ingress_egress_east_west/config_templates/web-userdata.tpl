@@ -1,4 +1,5 @@
 #! /bin/bash
+sleep 300
 echo "Welcome to TGW Attachment Routing Demo" > /var/www/html/demo.txt
 sudo apt update
 sudo apt -y upgrade
