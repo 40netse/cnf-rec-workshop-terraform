@@ -6,21 +6,21 @@
 #
 vpc_id=`aws ec2 describe-vpcs --region us-west-2 --filters Name=tag:Name,Values=tec-cnf-lab-inspection-vpc --query Vpcs[].VpcId --output text`
 echo Inspection VPC ID = $vpc_id
-public_subnet_id_az1=`aws ec2 describe-subnets --region us-west-2 --filters Name=tag:Name,Values=tec-cnf-lab-inspection-public-az1 --query Subnets[].SubnetId --output text`
+public_subnet_id_az1=`aws ec2 describe-subnets --region us-west-2 --filters Name=tag:Name,Values=tec-cnf-lab-inspection-public-az1-subnet --query Subnets[].SubnetId --output text`
 echo Inspection Public Subnet AZ1 ID = $public_subnet_id_az1
-public_subnet_id_az2=`aws ec2 describe-subnets --region us-west-2 --filters Name=tag:Name,Values=tec-cnf-lab-inspection-public-az2 --query Subnets[].SubnetId --output text`
+public_subnet_id_az2=`aws ec2 describe-subnets --region us-west-2 --filters Name=tag:Name,Values=tec-cnf-lab-inspection-public-az2-subnet --query Subnets[].SubnetId --output text`
 echo Inspection Public Subnet AZ2 ID = $public_subnet_id_az2
 
-fwaas_subnet_id_az1=`aws ec2 describe-subnets --region us-west-2 --filters Name=tag:Name,Values=tec-cnf-lab-inspection-fwaas-az1 --query Subnets[].SubnetId --output text`
+fwaas_subnet_id_az1=`aws ec2 describe-subnets --region us-west-2 --filters Name=tag:Name,Values=tec-cnf-lab-inspection-fwaas-az1-subnet --query Subnets[].SubnetId --output text`
 echo Inspection Fwaas Subnet AZ1 ID = $fwaas_subnet_id_az1
-fwaas_subnet_id_az2=`aws ec2 describe-subnets --region us-west-2 --filters Name=tag:Name,Values=tec-cnf-lab-inspection-fwaas-az2 --query Subnets[].SubnetId --output text`
+fwaas_subnet_id_az2=`aws ec2 describe-subnets --region us-west-2 --filters Name=tag:Name,Values=tec-cnf-lab-inspection-fwaas-az2-subnet --query Subnets[].SubnetId --output text`
 echo Inspection Fwaas Subnet AZ2 ID = $fwaas_subnet_id_az2
 nat_gateway_id_az1=`aws ec2 describe-nat-gateways --region us-west-2 --filter Name=subnet-id,Values=$public_subnet_id_az1 --query 'NatGateways[*].NatGatewayId' --output text`
 echo Inspection NAT Gateway ID AZ1 = $nat_gateway_id_az1
 nat_gateway_id_az2=`aws ec2 describe-nat-gateways --region us-west-2 --filter Name=subnet-id,Values=$public_subnet_id_az2 --query 'NatGateways[*].NatGatewayId' --output text`
 echo Inspection NAT Gateway ID AZ2 = $nat_gateway_id_az2
 tfile=$(mktemp /tmp/foostack1.XXXXXXXXX)
-aws ec2 describe-vpc-endpoints --region=us-west-2 --filter Name=vpc-id,Values=vpc-0d093024900a42555 --query 'VpcEndpoints[].VpcEndpointId' --output text > $tfile
+aws ec2 describe-vpc-endpoints --region=us-west-2 --filter Name=vpc-id,Values=$vpc_id --query 'VpcEndpoints[].VpcEndpointId' --output text > $tfile
 for i in `cat $tfile`
 do
 

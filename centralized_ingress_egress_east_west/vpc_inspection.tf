@@ -156,7 +156,7 @@ module "inspection-private-route-table-association-az1" {
   subnet_ids                 = module.subnet-inspection-private-az1.id
   route_table_id             = module.inspection-private-route-table-az1.id
 }
-module "fwaas-route-table-az1" {
+module "inspection-fwaas-route-table-az1" {
   source  = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
   rt_name = "${var.cp}-${var.env}-inspection-fwaas-rt-az1"
 
@@ -166,7 +166,7 @@ module "fwaas-route-table-association-az1" {
   source   = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
 
   subnet_ids                 = module.subnet-inspection-fwaas-az1.id
-  route_table_id             = module.fwaas-route-table-az1.id
+  route_table_id             = module.inspection-fwaas-route-table-az1.id
 }
 
 #
@@ -237,7 +237,7 @@ module "inspection-public-route-table_association-az1" {
 
 module "inspection-public-route-table-az2" {
   source  = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
-  rt_name = "${var.cp}-${var.env}-inspection-public-az2-rt"
+  rt_name = "${var.cp}-${var.env}-inspection-public-rt-az2"
 
   vpc_id                     = module.vpc-inspection.vpc_id
 }
@@ -286,7 +286,8 @@ resource "aws_default_route_table" "route_inspection" {
 }
 
 #
-#
+# Initial inspection table routes. These need to change after deploying GWLBe's
+# Inspection VPC - Public Route Table
 #
 resource "aws_route" "inspection-public-az1-default-route-default" {
   route_table_id         = module.inspection-public-route-table-az1.id
@@ -298,100 +299,70 @@ resource "aws_route" "inspection-public-az2-default-route-default" {
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = module.vpc-igw-inspection.igw_id
 }
-resource "aws_route" "public-az1-default-route-east" {
+resource "aws_route" "inspection-public-route-spoke-az1" {
   depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
   route_table_id         = module.inspection-public-route-table-az1.id
-  destination_cidr_block = var.vpc_cidr_east
+  destination_cidr_block = var.vpc_cidr_spoke
   transit_gateway_id     = module.vpc-transit-gateway.tgw_id
 }
-resource "aws_route" "public-az2-default-route-east" {
+resource "aws_route" "inspection-public-route-spoke-az2" {
   depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
   route_table_id         = module.inspection-public-route-table-az2.id
-  destination_cidr_block = var.vpc_cidr_east
+  destination_cidr_block = var.vpc_cidr_spoke
   transit_gateway_id     = module.vpc-transit-gateway.tgw_id
 }
 
-resource "aws_route" "public-az1-default-route-west" {
-  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
-  route_table_id         = module.inspection-public-route-table-az1.id
-  destination_cidr_block = var.vpc_cidr_west
-  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
-}
-resource "aws_route" "public-az2-default-route-west" {
-  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
-  route_table_id         = module.inspection-public-route-table-az2.id
-  destination_cidr_block = var.vpc_cidr_west
-  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
-}
-
-resource "aws_route" "private-az1-default-route" {
-  route_table_id         = module.inspection-private-route-table-az1.id
+#
+# Fwaas Routes
+#
+resource "aws_route" "inspection-fwaas-default-route-az1" {
+  route_table_id         = module.inspection-fwaas-route-table-az1.id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.vpc-inspection-az1.id
 }
-
-resource "aws_route" "private-az1-east-route" {
-  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
-  route_table_id         = module.inspection-private-route-table-az1.id
-  destination_cidr_block = var.vpc_cidr_east
-  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
-}
-resource "aws_route" "private-az1-west-route" {
-  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
-  route_table_id         = module.inspection-private-route-table-az1.id
-  destination_cidr_block = var.vpc_cidr_west
-  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
-}
-resource "aws_route" "private-az2-default-route" {
-  route_table_id         = module.inspection-private-route-table-az2.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id             = aws_nat_gateway.vpc-inspection-az2.id
-}
-
-resource "aws_route" "private-az2-east-route" {
-  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
-  route_table_id         = module.inspection-private-route-table-az2.id
-  destination_cidr_block = var.vpc_cidr_east
-  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
-}
-resource "aws_route" "private-az2-west-route" {
-  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
-  route_table_id         = module.inspection-private-route-table-az2.id
-  destination_cidr_block = var.vpc_cidr_west
-  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
-}
-resource "aws_route" "fwaas-az1-default-route" {
-  route_table_id         = module.fwaas-route-table-az1.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.vpc-inspection-az1.id
-}
-resource "aws_route" "fwaas-az1-east-route" {
-  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
-  route_table_id         = module.fwaas-route-table-az1.id
-  destination_cidr_block = var.vpc_cidr_east
-  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
-}
-resource "aws_route" "fwaas-az1-west-route" {
-  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
-  route_table_id         = module.fwaas-route-table-az1.id
-  destination_cidr_block = var.vpc_cidr_west
-  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
-}
-resource "aws_route" "fwaas-az2-default-route" {
+resource "aws_route" "inspection-fwaas-default-route-az2" {
   route_table_id         = module.inspection-fwaas-route-table-az2.id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.vpc-inspection-az2.id
 }
-resource "aws_route" "fwaas-az2-east-route" {
+resource "aws_route" "inspection-fwaas-spoke-route-az1" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-fwaas-route-table-az1.id
+  destination_cidr_block = var.vpc_cidr_spoke
+  transit_gateway_id         = module.vpc-transit-gateway.tgw_id
+}
+resource "aws_route" "inspection-fwaas-spoke-route-az2" {
   depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
   route_table_id         = module.inspection-fwaas-route-table-az2.id
-  destination_cidr_block = var.vpc_cidr_east
-  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
+  destination_cidr_block = var.vpc_cidr_spoke
+  transit_gateway_id         = module.vpc-transit-gateway.tgw_id
 }
-resource "aws_route" "fwaas-az2-west-route" {
+
+#
+# Private Routes. These two tables need a more specific subnet added after the GWLBe is deployed
+# to route the Jump Box subnet to the GWLBe. Can't add it here, because there isn't a "target" yet. 
+#
+resource "aws_route" "inspection-private-default-route-az1" {
+  route_table_id         = module.inspection-private-route-table-az1.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.vpc-inspection-az1.id
+}
+resource "aws_route" "inspection-private-default-route-az2" {
+  route_table_id         = module.inspection-private-route-table-az2.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.vpc-inspection-az1.id
+}
+resource "aws_route" "inspection-private-spoke-route-az1" {
+  depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
+  route_table_id         = module.inspection-fwaas-route-table-az1.id
+  destination_cidr_block = var.vpc_cidr_spoke
+  transit_gateway_id         = module.vpc-transit-gateway.tgw_id
+}
+resource "aws_route" "inspection-private-spoke-route-az2" {
   depends_on             = [module.vpc-transit-gateway-attachment-inspection.tgw_attachment_id]
   route_table_id         = module.inspection-fwaas-route-table-az2.id
-  destination_cidr_block = var.vpc_cidr_west
-  transit_gateway_id     = module.vpc-transit-gateway.tgw_id
+  destination_cidr_block = var.vpc_cidr_spoke
+  transit_gateway_id         = module.vpc-transit-gateway.tgw_id
 }
+
 

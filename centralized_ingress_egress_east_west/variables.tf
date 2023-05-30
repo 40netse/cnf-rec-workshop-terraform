@@ -37,6 +37,12 @@ variable "vpc_cidr_inspection" {
 variable "vpc_cidr_east" {
     description = "CIDR for the whole east VPC"
 }
+variable "vpc_cidr_spoke" {
+    description = "Super-Net CIDR for the spoke VPC's"
+}
+variable "vpc_cidr_jump_box" {
+    description = "CIDR for the jump box subnet"
+}
 variable "vpc_cidr_east_private_az1" {
     description = "CIDR for the AZ1 private subnet in East VPC"
 }

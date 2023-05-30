@@ -12,7 +12,7 @@ module "vpc-transit-gateway" {
 #
 module "vpc-transit-gateway-attachment-inspection" {
   source                         = "git::https://github.com/40netse/terraform-modules.git//aws_tgw_attachment"
-  tgw_attachment_name            = "${var.cp}-${var.env}-inpspection-tgw-attachment"
+  tgw_attachment_name            = "${var.cp}-${var.env}-inspection-tgw-attachment"
 
   transit_gateway_id                              = module.vpc-transit-gateway.tgw_id
   subnet_ids                                      = [ module.subnet-inspection-private-az1.id, module.subnet-inspection-private-az2.id]

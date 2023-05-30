@@ -50,3 +50,7 @@ output "z_west_instance_private_az1_ssh" {
 output "z_west_instance_private_az2_ssh" {
   value = "west linux az2 ssh: ssh -i ${var.keypair}.pem ubuntu@${local.linux_west_az2_ip_address}"
 }
+output "z_fortimanager_ip" {
+  value = "FortiManager IP = ${element(module.fortimanager.public_eip, 0)}"
+  description = "Fortimanager IP"
+}
