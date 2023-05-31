@@ -54,3 +54,7 @@ output "z_fortimanager_ip" {
   value = "FortiManager IP = ${element(module.fortimanager.public_eip, 0)}"
   description = "Fortimanager IP"
 }
+output "z_fortimanager_instance_id" {
+  value = "FortiManager Instance ID = ${module.fortimanager.instance_id}"
+  description = "Fortimanager Instance ID"
+}
