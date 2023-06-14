@@ -292,8 +292,9 @@ resource "aws_route" "fwaas-az2-default-route" {
 #
 resource "aws_eip" "nlb_eip" {
   count                 = 2
-  vpc                   = true
+  domain                = "vpc"
 }
+
 resource "aws_lb" "public_nlb_az1" {
   name = "${var.cp}-${var.env}-${var.vpc_name}-fwaas-az2"
   internal = false
